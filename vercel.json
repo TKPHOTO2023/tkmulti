@@ -4,6 +4,8 @@
     { "source": "/admin/", "destination": "/api/dashboard" },
     { "source": "/admin/login", "destination": "/api/login" },
     { "source": "/admin/logout", "destination": "/api/logout" },
-    { "source": "/admin/data", "destination": "/api/analytics-data" }
+    { "source": "/admin/data", "destination": "/api/analytics-data" },
+    { "source": "/speedtest", "destination": "/circletel-speedtest.html" },
+    { "source": "/speedtest/", "destination": "/circletel-speedtest.html" }
   ]
 }

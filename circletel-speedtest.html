@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CircleTel Speed Test</title>
+<meta name="description" content="Test your internet connection's download speed, upload speed, ping and jitter — free, in your browser, powered by CircleTel.">
+<style>
+  :root{
+    --bg:#060811;
+    --panel:#0c0f1c;
+    --line:#1c2136;
+    --ink:#f2f3f8;
+    --ink-dim:#9198b3;
+    --ink-faint:#5b6284;
+    --teal:#22e0c8;
+    --violet:#8b5cf6;
+    --magenta:#ff3fa4;
+    --amber:#ffb020;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #0d1330 0%, var(--bg) 55%) fixed;
+    color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  a{color:inherit;}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 28px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:.2px;
+    text-decoration:none;
+  }
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;
+    background:conic-gradient(from 220deg, var(--teal), var(--violet), var(--magenta), var(--teal));
+    display:flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  .brand-mark svg{width:18px;height:18px;}
+  .brand small{
+    display:block;font-size:10px;font-weight:600;letter-spacing:1.5px;
+    color:var(--ink-faint);text-transform:uppercase;margin-top:1px;
+  }
+  header .tag{
+    font-size:13px;color:var(--ink-dim);
+    display:flex;align-items:center;gap:8px;
+  }
+  header .tag .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px 1px var(--teal);}
+  @media (max-width:560px){ header .tag{display:none;} }
+
+  /* ---------- Layout ---------- */
+  main{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    padding:36px 20px 60px;
+  }
+  .card{
+    width:100%;
+    max-width:640px;
+    background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0) 30%), var(--panel);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:30px 26px 34px;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.6);
+  }
+
+  h1.title{
+    text-align:center;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:2px 0 26px;
+  }
+
+  /* ---------- Stat row ---------- */
+  .stats{
+    display:flex;
+    justify-content:center;
+    gap:46px;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  .stat{text-align:center;min-width:70px;}
+  .stat .k{
+    font-size:11px;letter-spacing:1.4px;color:var(--ink-faint);
+    text-transform:uppercase;font-weight:700;margin-bottom:6px;
+    display:flex;align-items:center;justify-content:center;gap:5px;
+  }
+  .stat .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .stat.ping .v{color:var(--amber);}
+  .stat.jitter .v{color:var(--violet);}
+  .stat.dl .v{color:var(--teal);}
+  .stat.ul .v{color:var(--magenta);}
+  .stat .u{font-size:12px;color:var(--ink-faint);font-weight:500;margin-left:2px;}
+
+  /* ---------- Gauge ---------- */
+  .gauge-wrap{
+    position:relative;
+    width:280px;height:280px;
+    margin:6px auto 10px;
+  }
+  .gauge-wrap svg{width:100%;height:100%;display:block;}
+  .gauge-center{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;
+  }
+  .gauge-value{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+  .gauge-unit{font-size:13px;color:var(--ink-dim);margin-top:8px;font-weight:600;letter-spacing:.5px;}
+  .gauge-phase{
+    font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+    color:var(--ink-faint);margin-top:6px;
+  }
+
+  /* ---------- GO button ---------- */
+  .go-wrap{display:flex;justify-content:center;margin:14px 0 24px;}
+  #goBtn{
+    width:132px;height:132px;border-radius:50%;
+    border:2px solid var(--teal);
+    background:radial-gradient(circle at 35% 30%, rgba(34,224,200,.18), rgba(34,224,200,.03) 70%);
+    color:var(--ink);
+    font-size:22px;font-weight:800;letter-spacing:2px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    box-shadow:0 0 0 0 rgba(34,224,200,.4);
+  }
+  #goBtn:hover:not(:disabled){transform:scale(1.04); box-shadow:0 0 40px -4px rgba(34,224,200,.55);}
+  #goBtn:active:not(:disabled){transform:scale(.98);}
+  #goBtn:disabled{opacity:.55;cursor:default;}
+  #goBtn.running{border-color:var(--magenta); }
+
+  /* ---------- Footer info ---------- */
+  .meta{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding-top:18px;border-top:1px solid var(--line);
+    flex-wrap:wrap;gap:16px;
+  }
+  .meta .col{font-size:13px;line-height:1.5;}
+  .meta .col .label{color:var(--ink-faint);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:3px;}
+  .meta .col .val{color:var(--ink);font-weight:600;}
+  .meta .col .sub{color:var(--ink-dim);font-size:12px;}
+
+  .conn-toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:4px;}
+  .conn-toggle button{
+    background:transparent;border:none;color:var(--ink-dim);font-size:12px;font-weight:700;
+    padding:5px 12px;cursor:pointer;letter-spacing:.4px;
+  }
+  .conn-toggle button.active{background:var(--teal);color:#04231f;}
+
+  .error-banner{
+    display:none;
+    background:rgba(255,63,164,.08);border:1px solid rgba(255,63,164,.35);
+    color:#ffb9dc;font-size:13px;border-radius:10px;padding:10px 14px;margin-bottom:18px;
+  }
+
+  footer{
+    text-align:center;font-size:12px;color:var(--ink-faint);padding:22px 20px 30px;
+  }
+  footer a{color:var(--ink-dim);text-decoration:underline;text-underline-offset:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="#">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#04231f" stroke-width="2.4" stroke-linecap="round"><path d="M2 8a15 15 0 0 1 20 0"/><path d="M5 12a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1.4" fill="#04231f" stroke="none"/></svg>
+    </span>
+    <span>CircleTel<small>Speed Test</small></span>
+  </a>
+  <div class="tag"><span class="dot"></span> Real-time connection diagnostics</div>
+</header>
+
+<main>
+  <div class="card">
+    <h1 class="title">Internet Speed Test</h1>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <div class="stats">
+      <div class="stat ping"><div class="k">Ping</div><div class="v" id="statPing">—</div><span class="u">ms</span></div>
+      <div class="stat jitter"><div class="k">Jitter</div><div class="v" id="statJitter">—</div><span class="u">ms</span></div>
+      <div class="stat dl"><div class="k">Download</div><div class="v" id="statDown">—</div><span class="u">Mbps</span></div>
+      <div class="stat ul"><div class="k">Upload</div><div class="v" id="statUp">—</div><span class="u">Mbps</span></div>
+    </div>
+
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#8b5cf6"/>
+            <stop offset="45%" stop-color="#22e0c8"/>
+            <stop offset="100%" stop-color="#22e0c8"/>
+          </linearGradient>
+        </defs>
+        <path id="arcBg" d="" fill="none" stroke="#1c2136" stroke-width="12" stroke-linecap="round"/>
+        <path id="arcFg" d="" fill="none" stroke="url(#arcGrad)" stroke-width="12" stroke-linecap="round"
+              stroke-dasharray="0 1000" style="transition:stroke-dasharray .25s linear;"/>
+        <g id="ticks"></g>
+      </svg>
+      <div class="gauge-center">
+        <div class="gauge-value" id="gaugeValue">0.00</div>
+        <div class="gauge-unit">Mbps</div>
+        <div class="gauge-phase" id="gaugePhase">Ready</div>
+      </div>
+    </div>
+
+    <div class="go-wrap">
+      <button id="goBtn">GO</button>
+    </div>
+
+    <div class="meta">
+      <div class="col">
+        <div class="label">Your IP</div>
+        <div class="val" id="ipVal">—</div>
+        <div class="sub" id="ispVal">—</div>
+      </div>
+      <div class="col">
+        <div class="label">Connections</div>
+        <div class="conn-toggle">
+          <button id="connMulti" class="active">Multi</button>
+          <button id="connSingle">Single</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Powered by CircleTel &middot; results are estimates and may vary with network conditions &middot;
+  <a href="/">circletel.co.za</a>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- Config ----------------
+  var PING_COUNT = 12;
+  var PING_TIMEOUT_MS = 4000;
+  var DOWNLOAD_DURATION_MS = 8000;
+  var UPLOAD_DURATION_MS = 8000;
+  var WARMUP_MS = 800; // ignore this much at the start of each phase when computing the final figure
+  var CHUNK_BYTES_DOWNLOAD = 4 * 1024 * 1024;
+  var CHUNK_BYTES_UPLOAD = 2 * 1024 * 1024;
+  var GAUGE_MAX = 1000; // Mbps, matches tick scale below
+  var TICKS = [0, 5, 10, 50, 100, 250, 500, 750, 1000];
+
+  var conns = 6; // parallel connections ("Multi")
+
+  // ---------------- DOM ----------------
+  var $ = function(id){ return document.getElementById(id); };
+  var goBtn = $('goBtn');
+  var gaugeValue = $('gaugeValue');
+  var gaugePhase = $('gaugePhase');
+  var statPing = $('statPing');
+  var statJitter = $('statJitter');
+  var statDown = $('statDown');
+  var statUp = $('statUp');
+  var errorBanner = $('errorBanner');
+  var connMultiBtn = $('connMulti');
+  var connSingleBtn = $('connSingle');
+  var ipVal = $('ipVal');
+  var ispVal = $('ispVal');
+
+  connMultiBtn.addEventListener('click', function(){ conns = 6; connMultiBtn.classList.add('active'); connSingleBtn.classList.remove('active'); });
+  connSingleBtn.addEventListener('click', function(){ conns = 1; connSingleBtn.classList.add('active'); connMultiBtn.classList.remove('active'); });
+
+  function showError(msg){
+    errorBanner.textContent = msg;
+    errorBanner.style.display = 'block';
+  }
+  function clearError(){
+    errorBanner.style.display = 'none';
+    errorBanner.textContent = '';
+  }
+
+  // ---------------- Gauge (semi-circular log-ish scale, matches TICKS layout) ----------------
+  var arcBg = $('arcBg');
+  var arcFg = $('arcFg');
+  var ticksGroup = $('ticks');
+
+  var CX = 100, CY = 108, R = 78;
+  var START_ANGLE = -220; // degrees, sweep is 260deg total (like the reference dial)
+  var SWEEP = 260;
+
+  function polar(cx, cy, r, angleDeg){
+    var a = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  }
+  function arcPath(cx, cy, r, startDeg, endDeg){
+    var s = polar(cx, cy, r, startDeg);
+    var e = polar(cx, cy, r, endDeg);
+    var large = (endDeg - startDeg) % 360 > 180 ? 1 : 0;
+    return 'M ' + s.x + ' ' + s.y + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + e.x + ' ' + e.y;
+  }
+  function valueToFraction(mbps){
+    // piecewise-linear across the tick marks so low speeds (most home connections)
+    // still occupy a legible portion of the dial, like the reference design.
+    var v = Math.max(0, Math.min(mbps, TICKS[TICKS.length - 1]));
+    for (var i = 0; i < TICKS.length - 1; i++){
+      if (v <= TICKS[i + 1]){
+        var span = TICKS[i + 1] - TICKS[i];
+        var local = span === 0 ? 0 : (v - TICKS[i]) / span;
+        return (i + local) / (TICKS.length - 1);
+      }
+    }
+    return 1;
+  }
+
+  var fullPathLen = 0;
+  function initGauge(){
+    var d = arcPath(CX, CY, R, START_ANGLE, START_ANGLE + SWEEP);
+    arcBg.setAttribute('d', d);
+    arcFg.setAttribute('d', d);
+    fullPathLen = arcFg.getTotalLength();
+    arcFg.setAttribute('stroke-dasharray', '0 ' + fullPathLen);
+
+    TICKS.forEach(function(t){
+      var frac = valueToFraction(t);
+      var ang = START_ANGLE + SWEEP * frac;
+      var p1 = polar(CX, CY, R + 12, ang);
+      var ns = 'http://www.w3.org/2000/svg';
+      var txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', p1.x);
+      txt.setAttribute('y', p1.y + 3);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '7');
+      txt.setAttribute('fill', '#5b6284');
+      txt.textContent = t;
+      ticksGroup.appendChild(txt);
+    });
+  }
+  function setGauge(mbps){
+    var frac = valueToFraction(mbps);
+    var len = fullPathLen * frac;
+    arcFg.setAttribute('stroke-dasharray', len + ' ' + fullPathLen);
+    gaugeValue.textContent = mbps >= 100 ? mbps.toFixed(1) : mbps.toFixed(2);
+  }
+  initGauge();
+
+  // ---------------- Helpers ----------------
+  function fmt(n, d){
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    return n.toFixed(d === undefined ? 2 : d);
+  }
+
+  function nowMs(){ return performance.now(); }
+
+  function fetchWithTimeout(url, opts, timeoutMs){
+    var controller = new AbortController();
+    var t = setTimeout(function(){ controller.abort(); }, timeoutMs);
+    opts = opts || {};
+    opts.signal = controller.signal;
+    return fetch(url, opts).finally(function(){ clearTimeout(t); });
+  }
+
+  // ---------------- Phase: Ping / Jitter ----------------
+  function runPing(){
+    gaugePhase.textContent = 'Ping';
+    var samples = [];
+    var i = 0;
+
+    function one(){
+      var url = '/api/speedtest/ping?_=' + Date.now() + Math.random();
+      var t0 = nowMs();
+      return fetchWithTimeout(url, { cache: 'no-store' }, PING_TIMEOUT_MS).then(function(){
+        var dt = nowMs() - t0;
+        samples.push(dt);
+        statPing.textContent = fmt(Math.min.apply(null, samples), 0);
+      }).catch(function(){ /* ignore individual timeouts */ });
+    }
+
+    function loop(){
+      if (i >= PING_COUNT) return Promise.resolve();
+      i++;
+      return one().then(loop);
+    }
+
+    return loop().then(function(){
+      if (samples.length === 0) throw new Error('Could not reach the ping endpoint.');
+      var ping = Math.min.apply(null, samples);
+      var diffs = [];
+      for (var k = 1; k < samples.length; k++) diffs.push(Math.abs(samples[k] - samples[k - 1]));
+      var jitter = diffs.length ? diffs.reduce(function(a,b){return a+b;}, 0) / diffs.length : 0;
+      statPing.textContent = fmt(ping, 0);
+      statJitter.textContent = fmt(jitter, 0);
+      return { ping: ping, jitter: jitter };
+    });
+  }
+
+  // ---------------- Phase: Download ----------------
+  function runDownload(){
+    gaugePhase.textContent = 'Download';
+    setGauge(0);
+    var totalBytes = 0;
+    var startTime = nowMs();
+    var endTime = startTime + DOWNLOAD_DURATION_MS;
+    var measureStart = startTime + WARMUP_MS;
+    var active = true;
+
+    function worker(){
+      function next(){
+        if (!active || nowMs() >= endTime) return Promise.resolve();
+        var url = '/api/speedtest/download?bytes=' + CHUNK_BYTES_DOWNLOAD + '&_=' + Date.now() + Math.random();
+        return fetch(url, { cache: 'no-store' }).then(function(res){
+          if (!res.ok || !res.body) throw new Error('Download endpoint returned an error.');
+          var reader = res.body.getReader();
+          function pump(){
+            if (!active) return;
+            return reader.read().then(function(r){
+              if (r.done) return;
+              totalBytes += r.value.byteLength;
+              return pump();
+            });
+          }
+          return pump().then(next);
+        });
+      }
+      return next();
+    }
+
+    var tick = setInterval(function(){
+      var elapsed = (nowMs() - Math.max(startTime, measureStart)) / 1000;
+      if (elapsed > 0.15){
+        var mbps = (totalBytes * 8) / elapsed / 1e6;
+        setGauge(mbps);
+        statDown.textContent = fmt(mbps, 2);
+      }
+    }, 150);
+
+    var workers = [];
+    for (var i = 0; i < conns; i++) workers.push(worker());
+
+    return Promise.all(workers).catch(function(err){
+      active = false;
+      throw err;
+    }).then(function(){
+      active = false;
+      clearInterval(tick);
+      var elapsed = (nowMs() - measureStart) / 1000;
+      if (elapsed <= 0) elapsed = (nowMs() - startTime) / 1000;
+      var mbps = (totalBytes * 8) / elapsed / 1e6;
+      statDown.textContent = fmt(mbps, 2);
+      setGauge(mbps);
+      return mbps;
+    }).catch(function(err){
+      clearInterval(tick);
+      throw err;
+    });
+  }
+
+  // ---------------- Phase: Upload ----------------
+  function makeUploadBlob(bytes){
+    var buf = new Uint8Array(bytes);
+    var PIECE = 65536;
+    for (var o = 0; o < bytes; o += PIECE){
+      var end = Math.min(o + PIECE, bytes);
+      crypto.getRandomValues(buf.subarray(o, end));
+    }
+    return new Blob([buf], { type: 'application/octet-stream' });
+  }
+
+  function runUpload(){
+    gaugePhase.textContent = 'Upload';
+    setGauge(0);
+    var blob = makeUploadBlob(CHUNK_BYTES_UPLOAD);
+    var startTime = nowMs();
+    var endTime = startTime + UPLOAD_DURATION_MS;
+    var measureStart = startTime + WARMUP_MS;
+    var active = true;
+
+    var loaded = {}; // per-connection running total for the in-flight request
+    var completedBytes = {}; // per-connection bytes from finished requests
+
+    function xhrPost(id){
+      return new Promise(function(resolve, reject){
+        if (!active || nowMs() >= endTime) return resolve();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/speedtest/upload?_=' + Date.now() + Math.random());
+        xhr.upload.onprogress = function(e){
+          loaded[id] = e.loaded;
+        };
+        xhr.onload = function(){
+          completedBytes[id] = (completedBytes[id] || 0) + CHUNK_BYTES_UPLOAD;
+          loaded[id] = 0;
+          resolve();
+        };
+        xhr.onerror = function(){ reject(new Error('Upload endpoint returned an error.')); };
+        xhr.ontimeout = function(){ resolve(); };
+        xhr.timeout = 15000;
+        xhr.send(blob);
+      });
+    }
+
+    function worker(id){
+      function next(){
+        if (!active || nowMs() >= endTime) return Promise.resolve();
+        return xhrPost(id).then(next);
+      }
+      return next();
+    }
+
+    function currentTotal(){
+      var total = 0;
+      Object.keys(completedBytes).forEach(function(k){ total += completedBytes[k]; });
+      Object.keys(loaded).forEach(function(k){ total += (loaded[k] || 0); });
+      return total;
+    }
+
+    var tick = setInterval(function(){
+      var elapsed = (nowMs() - Math.max(startTime, measureStart)) / 1000;
+      if (elapsed > 0.15){
+        var mbps = (currentTotal() * 8) / elapsed / 1e6;
+        setGauge(mbps);
+        statUp.textContent = fmt(mbps, 2);
+      }
+    }, 150);
+
+    var workers = [];
+    for (var i = 0; i < conns; i++) workers.push(worker(i));
+
+    return Promise.all(workers).catch(function(err){
+      active = false;
+      throw err;
+    }).then(function(){
+      active = false;
+      clearInterval(tick);
+      var elapsed = (nowMs() - measureStart) / 1000;
+      if (elapsed <= 0) elapsed = (nowMs() - startTime) / 1000;
+      var mbps = (currentTotal() * 8) / elapsed / 1e6;
+      statUp.textContent = fmt(mbps, 2);
+      setGauge(mbps);
+      return mbps;
+    }).catch(function(err){
+      clearInterval(tick);
+      throw err;
+    });
+  }
+
+  // ---------------- IP / ISP lookup (best-effort, non-blocking) ----------------
+  function loadIpInfo(){
+    fetch('https://ipapi.co/json/', { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(data){
+        if (!data) return;
+        ipVal.textContent = data.ip || '—';
+        var isp = data.org || data.asn || '';
+        var loc = [data.city, data.region].filter(Boolean).join(', ');
+        ispVal.textContent = [isp, loc].filter(Boolean).join(' · ') || '—';
+      })
+      .catch(function(){ /* ignore — offline or blocked, non-critical */ });
+  }
+  loadIpInfo();
+
+  // ---------------- Run ----------------
+  function resetStats(){
+    statPing.textContent = '—';
+    statJitter.textContent = '—';
+    statDown.textContent = '—';
+    statUp.textContent = '—';
+    setGauge(0);
+  }
+
+  function runTest(){
+    clearError();
+    resetStats();
+    goBtn.disabled = true;
+    goBtn.classList.add('running');
+    goBtn.textContent = '···';
+
+    runPing()
+      .then(function(){ return runDownload(); })
+      .then(function(){ return runUpload(); })
+      .then(function(){
+        gaugePhase.textContent = 'Done';
+      })
+      .catch(function(err){
+        showError(err && err.message ? err.message : 'The speed test could not complete. Please try again.');
+        gaugePhase.textContent = 'Error';
+      })
+      .then(function(){
+        goBtn.disabled = false;
+        goBtn.classList.remove('running');
+        goBtn.textContent = 'GO';
+      });
+  }
+
+  goBtn.addEventListener('click', runTest);
+})();
+</script>
+</body>
+</html>
