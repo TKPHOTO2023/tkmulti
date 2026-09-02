@@ -1,24 +1,11 @@
-// Edge function: consumes the uploaded body and reports how many bytes were received,
-// for upload-speed measurement.
-export const config = { runtime: 'edge' };
-
-export default async function handler(req) {
+// Consumes the uploaded body and reports how many bytes were received,
+// for upload-speed measurement. Runs as a Node serverless function pinned to the
+// Cape Town region (see vercel.json) so it measures the user's real upload path.
+module.exports = async (req, res) => {
   let received = 0;
+  for await (const chunk of req) received += chunk.length;
 
-  if (req.body) {
-    const reader = req.body.getReader();
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) received += value.byteLength;
-    }
-  }
-
-  return new Response(JSON.stringify({ received }), {
-    status: 200,
-    headers: {
-      'content-type': 'application/json',
-      'cache-control': 'no-store, no-cache, must-revalidate',
-    },
-  });
-}
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.status(200).send(JSON.stringify({ received }));
+};
